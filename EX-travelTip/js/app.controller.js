@@ -1,11 +1,17 @@
 import { locService } from './services/loc.service.js'
 import { mapService } from './services/map.service.js'
-const API_KEY = 'c92356dddebbfbe9e838bf6148291d71'
 window.onload = onInit
 window.onAddMarker = onAddMarker
 window.onPanTo = onPanTo
 window.onGetLocs = onGetLocs
 window.onGetUserPos = onGetUserPos
+window.renderPlaces = renderPlaces
+
+function onRemovePlace(idToRemove) {
+    console.log(idToRemove);
+    locService.remove(idToRemove).then(loadLocs)
+}
+
 
 function onInit() {
     mapService.initMap()
@@ -13,7 +19,27 @@ function onInit() {
             console.log('Map is ready')
         })
         .catch(() => console.log('Error: cannot init map'))
+    renderPlaces()    
 }
+
+function renderPlaces() {
+     getLocs().then(places =>{
+
+         const elList = document.querySelector('.place-list')
+         let strHtmls = places
+         .map(({ id, name }) => {
+             return `
+             <li>
+             <h4>${name}</h4>
+             <span class="close-btn" onclick="onRemovePlace('${id}')">❌</span>
+             <span class="btn-pan" onclick="onPanTo('${id}')">GO</span>
+             </li>
+             `
+            })
+            .join('')
+            elList.innerHTML = strHtmls
+        })
+        }
 
 // This function provides a Promise API to the callback-based-api of getCurrentPosition
 function getPosition() {
@@ -51,3 +77,8 @@ function onPanTo() {
     console.log('Panning the Map')
     mapService.panTo(35.6895, 139.6917)
 }
+
+function onDownloadCSV(elLink) {
+    const csvContent = getPlacesAsCSV()
+    elLink.href = 'data:text/csv;charset=utf-8,' + csvContent
+  }
